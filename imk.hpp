@@ -21,13 +21,13 @@ public:
     const char **getFiles() const { return m_files; }
 
     void addFd(int fd) { m_fds.push_back(fd); }
-    void setFd(int idx, int fd)
+    void setFd(size_t idx, int fd)
     {
-        if (idx < 0 || idx >= m_fds.size()) { return; }
+        if (idx >= m_fds.size()) { return; }
         m_fds[idx] = fd;
     }
 
-    int getFdIndex(int fd)
+    ssize_t getFdIndex(int fd)
     {
         std::vector<int>::const_iterator it =
             find(m_fds.begin(), m_fds.end(), fd);

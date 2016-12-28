@@ -63,7 +63,7 @@ Poll::regFile(const char *path)
 int
 Poll::dispatch()
 {
-    int rv, len;
+    ssize_t len;
     char buf[BUF_LEN];
 
     s_running = true;
@@ -80,10 +80,10 @@ Poll::dispatch()
             continue;
         }
 
-        for (int i = 0; i < len;) {
+        for (ssize_t i = 0; i < len;) {
             struct inotify_event *ev = (struct inotify_event *)&buf[i];
 
-            int idx = m_cfg.getFdIndex(ev->wd);
+            ssize_t idx = m_cfg.getFdIndex(ev->wd);
             if (idx != -1) {
                 const char **files = m_cfg.getFiles();
                 LOG_INFO_VA("[====== %s (%u) =====]",
@@ -110,7 +110,7 @@ void
 Poll::close()
 {
     ::close(m_qfd);
-    for (int i = 0; i < m_cfg.fds().size(); ++i) {
+    for (size_t i = 0; i < m_cfg.fds().size(); ++i) {
         ::close(m_cfg.fds()[i]);
     }
 }
