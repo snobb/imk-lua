@@ -9,10 +9,13 @@ namespace imk {
 class Config
 {
 public:
-    Config() {}
+    Config(int argc, char **argv) : m_cmd(NULL), m_files(NULL)
+    {
+        parseArgs(argc, argv);
+    }
+
     ~Config() {}
 
-    void parseArgs(int argc, char **argv);
 
     const char *getCommand() const { return m_cmd; }
     const char **getFiles() const { return m_files; }
@@ -31,9 +34,13 @@ public:
         return (it == m_fds.end() ? -1 : (it - m_fds.begin()));
     }
 
-    const std::vector<int> fds() const { return m_fds; };
+    const std::vector<int> &fds() const { return m_fds; };
 
 private:
+    void parseArgs(int argc, char **argv);
+    void usage();
+
+    const char *m_pname;
     const char *m_cmd;
     const char **m_files;
     std::vector<int> m_fds;

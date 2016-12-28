@@ -26,9 +26,10 @@ public:
 
     int regFile(const char *path);
     int dispatch();
-    void close();
 
 private:
+    void close();
+
     Config &m_cfg;
     int m_qfd;
 };

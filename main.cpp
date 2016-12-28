@@ -22,30 +22,25 @@ main(int argc, char **argv)
     setbuf(stdout, NULL);
     setbuf(stderr, NULL);
 
-    Config cfg;
-    cfg.parseArgs(argc, argv);
-
+    Config cfg(argc, argv);
     Poll poll(cfg);
 
     printf(":: [%s] start monitoring: cmd[%s] files[", get_time(),
             cfg.getCommand());
     const char **files = cfg.getFiles();
     while (*files != NULL) {
-        printf("%s", *files++);
+        const char *file = *files++;
+        printf("%s", file);
         if (*files != NULL) {
             printf(" ");
         }
+
+        int wd = poll.regFile(file);
+        cfg.addFd(wd);
     }
     printf("]\n");
 
-    files = cfg.getFiles();
-    while (*files != NULL) {
-        int wd = poll.regFile(*files++);
-        cfg.addFd(wd);
-    }
-
     poll.dispatch();
-    poll.close();
 
     return 0;
 }
@@ -57,14 +52,15 @@ Config::parseArgs(int argc, char **argv)
     int ch;
     opterr = 0;
 
+    m_pname = argv[0];
     if (argc == 1) {
-        usage(argv[0]);
+        usage();
     }
 
     while ((ch = getopt(argc, argv, "hc:")) != -1) {
         switch (ch) {
             case 'h':
-                usage(argv[0]);
+                usage();
                 exit(0);
 
             case 'c':
@@ -92,7 +88,7 @@ Config::parseArgs(int argc, char **argv)
 
 //------------------------------------------------------------------------------
 void
-usage(const char *pname)
+Config::usage()
 {
     fprintf(stdout,
             "usage: %s [-h] -c <command> <file ...>\n\n"
@@ -101,7 +97,7 @@ usage(const char *pname)
             "      -c <cmd>    - command to execute when event is triggered\n"
             "      <file ...>  - list of files to monitor\n\n"
             "   Please use quotes around the command if it is composed of "
-            "multiple words\n\n", pname);
+            "multiple words\n\n", m_pname);
 }
 
 //------------------------------------------------------------------------------
