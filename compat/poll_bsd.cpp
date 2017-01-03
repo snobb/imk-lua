@@ -8,8 +8,8 @@
 #include <stdint.h>
 #include <sys/event.h>
 
-#include "../imk.hpp"
-#include "../compat.hpp"
+#include "../config.hpp"
+#include "../poll_compat.hpp"
 #include "../log.hpp"
 
 using namespace std;

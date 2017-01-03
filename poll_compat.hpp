@@ -1,5 +1,5 @@
-#ifndef __POLL_HPP__
-#define __POLL_HPP__
+#ifndef __POLL_COMPAT_HPP__
+#define __POLL_COMPAT_HPP__
 
 #include <stdlib.h>
 #include <errno.h>
@@ -36,4 +36,4 @@ private:
 
 }  // namespace imk
 
-#endif /* __POLL_HPP__ */
+#endif /* __POLL_COMPAT_HPP__ */

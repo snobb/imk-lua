@@ -1,5 +1,5 @@
-#ifndef __IMK_HPP__
-#define __IMK_HPP__
+#ifndef __CONFIG_HPP__
+#define __CONFIG_HPP__
 
 #include <vector>
 #include <algorithm>
@@ -16,24 +16,13 @@ public:
 
     ~Config() {}
 
-
     const char *getCommand() const { return m_cmd; }
     const char **getFiles() const { return m_files; }
 
-    void addFd(int fd) { m_fds.push_back(fd); }
-    void setFd(size_t idx, int fd)
-    {
-        if (idx >= m_fds.size()) { return; }
-        m_fds[idx] = fd;
-    }
+    void addFd(int fd);
+    void setFd(size_t idx, int fd);
 
-    ssize_t getFdIndex(int fd)
-    {
-        std::vector<int>::const_iterator it =
-            find(m_fds.begin(), m_fds.end(), fd);
-        return (it == m_fds.end() ? -1 : (it - m_fds.begin()));
-    }
-
+    ssize_t getFdIndex(int fd);
     const std::vector<int> &fds() const { return m_fds; };
 
 private:
@@ -48,5 +37,5 @@ private:
 
 }  // namespace imk
 
-#endif /* __IMK_HPP__ */
+#endif /* __CONFIG_HPP__ */
 
