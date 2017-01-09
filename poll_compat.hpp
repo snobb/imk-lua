@@ -3,7 +3,9 @@
 
 #include <stdlib.h>
 #include <errno.h>
+#include <algorithm>
 
+#include "imk.hpp"
 #include "log.hpp"
 
 namespace imk {
@@ -11,27 +13,26 @@ namespace imk {
 class Poll
 {
 public:
-    Poll(Config &cfg) : m_cfg(cfg), m_qfd(-1)
-    {
-        static int instance_cnt = 0;
-
-        if (instance_cnt > 0) {
-            LOG_ERR("Cannot have multiple instances");
-            abort();
-        }
-        ++instance_cnt;
-    }
-
+    Poll(Config &cfg);
     ~Poll() { close(); }
 
-    int regFile(const char *path);
+    // Platform depenedant methods defined in /compat
+    int regFile(const std::string &path);
     int dispatch();
 
 private:
+    ssize_t getFdIndex(int fd);
+    void setFd(size_t idx, int fd);
     void close();
 
     Config &m_cfg;
     int m_qfd;
+    std::vector<int> m_fds;
+
+    // disable default and copy constructors;
+    Poll() =delete;
+    Poll(Poll &) = delete;
+    Poll(const Poll &) = delete;
 };
 
 }  // namespace imk

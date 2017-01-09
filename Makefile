@@ -12,7 +12,7 @@ LIBS            :=
 CXXFLAGS        := -Wall $(INCLUDES)
 LFLAGS          := $(LIBS)
 
-.if $(CXX) == g++ || $(CXX) == clang++
+.if $(CXX) == g++ || $(CXX) == clang++ || $(CXX) == c++ || $(CXX) == eg++
     CXXFLAGS := -std=c++11 -pedantic
 .endif
 

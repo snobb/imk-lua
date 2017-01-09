@@ -3,7 +3,6 @@
  *  author: Aleksei Kozadaev (2016)
  */
 
-#include <stdio.h>
 #include <stdlib.h>
 #include <stdbool.h>
 #include <unistd.h>
@@ -12,7 +11,7 @@
 #include <sys/stat.h>
 #include <sys/inotify.h>
 
-#include "../config.hpp"
+#include "../imk.hpp"
 #include "../poll_compat.hpp"
 #include "../log.hpp"
 
@@ -30,7 +29,7 @@ static void sig_handler(int);
 
 //------------------------------------------------------------------------------
 int
-Poll::regFile(const char *path)
+Poll::regFile(const string &path)
 {
     int rv;
 
@@ -45,11 +44,11 @@ Poll::regFile(const char *path)
     }
 
     struct stat st;
-    if ((rv = stat(path, &st)) != 0) {
+    if ((rv = stat(path.c_str(), &st)) != 0) {
         return -1;
     }
 
-    rv = inotify_add_watch(m_qfd, path, FILTERS);
+    rv = inotify_add_watch(m_qfd, path.c_str(), FILTERS);
 
     if (rv == -1) {
         LOG_PERROR("inotify_add_watch");
@@ -83,23 +82,22 @@ Poll::dispatch()
         for (ssize_t i = 0; i < len;) {
             struct inotify_event *ev = (struct inotify_event *)&buf[i];
 
-            ssize_t idx = m_cfg.getFdIndex(ev->wd);
+            ssize_t idx = getFdIndex(ev->wd);
             if (idx != -1) {
-                const char **files = m_cfg.getFiles();
-                LOG_INFO_VA("[====== %s (%u) =====]",
-                        files[idx], ev->wd);
+                const char *file = m_cfg.files[idx].c_str();
+                LOG_INFO_VA("[====== %s (%u) =====]", file, ev->wd);
 
-                int wd = inotify_add_watch(m_qfd, files[idx], FILTERS);
+                int wd = inotify_add_watch(m_qfd, file, FILTERS);
                 if (wd == -1) {
                     LOG_PERROR("inotify_add_watch");
                 }
-                m_cfg.setFd(idx, wd);
+                setFd(idx, wd);
             }
 
             i += EVENT_SIZE + ev->len;
         }
 
-        system(m_cfg.getCommand());
+        system(m_cfg.command.c_str());
     }
 
     return 0;
@@ -110,8 +108,8 @@ void
 Poll::close()
 {
     ::close(m_qfd);
-    for (size_t i = 0; i < m_cfg.fds().size(); ++i) {
-        ::close(m_cfg.fds()[i]);
+    for (auto &fd : m_fds) {
+        ::close(fd);
     }
 }
 

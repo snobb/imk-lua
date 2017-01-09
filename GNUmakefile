@@ -26,7 +26,7 @@ LIBS            :=
 CXXFLAGS        := -Wall $(INCLUDES)
 LFLAGS          := $(LIBS)
 
-ifeq ($(CXX), $(filter $(CXX), clang++ g++ c++))
+ifeq ($(CXX), $(filter $(CXX), clang++ g++ c++ eg++))
     CXXFLAGS := -std=c++11 -pedantic
 endif
 
