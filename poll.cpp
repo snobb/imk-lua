@@ -7,6 +7,7 @@
 
 using namespace imk;
 
+//------------------------------------------------------------------------------
 Poll::Poll(Config &cfg) : m_cfg(cfg), m_qfd(-1)
 {
     static int instance_cnt = 0;
@@ -18,11 +19,12 @@ Poll::Poll(Config &cfg) : m_cfg(cfg), m_qfd(-1)
     ++instance_cnt;
 
     m_fds.reserve(cfg.files.size());
-    for (auto &file : cfg.files) {
+    for (const auto &file : cfg.files) {
         m_fds.push_back(regFile(file));
     }
 }
 
+//------------------------------------------------------------------------------
 ssize_t
 Poll::getFdIndex(int fd)
 {
@@ -30,6 +32,7 @@ Poll::getFdIndex(int fd)
     return (it == m_fds.end() ? -1 : (it - m_fds.begin()));;
 }
 
+//------------------------------------------------------------------------------
 void
 Poll::setFd(size_t idx, int fd)
 {
@@ -37,3 +40,4 @@ Poll::setFd(size_t idx, int fd)
     m_fds[idx] = fd;
 }
 
+//------------------------------------------------------------------------------

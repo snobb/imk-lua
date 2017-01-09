@@ -17,7 +17,7 @@ public:
     ~Poll() { close(); }
 
     // Platform depenedant methods defined in /compat
-    int regFile(const std::string &path);
+    int regFile(const char *path);
     int dispatch();
 
 private:

@@ -29,7 +29,7 @@ static void sig_handler(int);
 
 //------------------------------------------------------------------------------
 int
-Poll::regFile(const string &path)
+Poll::regFile(const char *path)
 {
     int rv;
 
@@ -44,11 +44,11 @@ Poll::regFile(const string &path)
     }
 
     struct stat st;
-    if ((rv = stat(path.c_str(), &st)) != 0) {
+    if ((rv = stat(path, &st)) != 0) {
         return -1;
     }
 
-    rv = inotify_add_watch(m_qfd, path.c_str(), FILTERS);
+    rv = inotify_add_watch(m_qfd, path, FILTERS);
 
     if (rv == -1) {
         LOG_PERROR("inotify_add_watch");
@@ -84,10 +84,8 @@ Poll::dispatch()
 
             ssize_t idx = getFdIndex(ev->wd);
             if (idx != -1) {
-                const char *file = m_cfg.files[idx].c_str();
-                LOG_INFO_VA("[====== %s (%u) =====]", file, ev->wd);
-
-                int wd = inotify_add_watch(m_qfd, file, FILTERS);
+                LOG_INFO_VA("[====== %s (%u) =====]", m_cfg.files[idx], ev->wd);
+                int wd = inotify_add_watch(m_qfd, m_cfg.files[idx], FILTERS);
                 if (wd == -1) {
                     LOG_PERROR("inotify_add_watch");
                 }
@@ -108,9 +106,10 @@ void
 Poll::close()
 {
     ::close(m_qfd);
-    for (auto &fd : m_fds) {
+    for (const auto &fd : m_fds) {
         ::close(fd);
     }
+    m_fds.clear();
 }
 
 //------------------------------------------------------------------------------

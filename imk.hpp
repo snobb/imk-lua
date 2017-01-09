@@ -6,7 +6,7 @@
 
 struct Config {
     std::string command;
-    std::vector<std::string> files;
+    std::vector<const char *> files;
 };
 
 #endif /* __IMK_HPP__ */

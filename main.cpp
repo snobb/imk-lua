@@ -29,7 +29,7 @@ main(int argc, char **argv)
     parseArgs(argc, argv, cfg);
 
     stringstream files;
-    vector<string>::const_iterator it = cfg.files.begin();
+    vector<const char *>::const_iterator it = cfg.files.begin();
     for (; it != prev(cfg.files.end()); ++it) {
         files << *it << " ";
     }
@@ -71,8 +71,8 @@ parseArgs(int argc, char **argv, Config &cfg)
         }
     }
 
-    const char **files = (const char**)argv + optind;
-    cfg.files = vector<string>(files, files + argc - optind);
+    const char **files = (const char **)argv + optind;
+    cfg.files = vector<const char *>(files, files + argc - optind);
 
     if (cfg.command.empty()) {
         LOG_ERR("error: command was not specified");

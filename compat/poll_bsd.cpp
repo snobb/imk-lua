@@ -22,7 +22,7 @@ static bool s_running = false;
 
 //------------------------------------------------------------------------------
 int
-Poll::regFile(const string &path)
+Poll::regFile(const char *path)
 {
     if (m_qfd == -1) {
         signal(SIGINT, sig_handler);
@@ -33,7 +33,7 @@ Poll::regFile(const string &path)
         }
     }
 
-    return set_watch(m_qfd, path.c_str());
+    return set_watch(m_qfd, path);
 }
 
 //------------------------------------------------------------------------------
@@ -55,10 +55,10 @@ Poll::dispatch()
 
         int idx = getFdIndex((int)(intptr_t)ev.udata);
         if (idx != -1) {
-            int fd = set_watch(m_qfd, m_cfg.files[idx].c_str());
+            int fd = set_watch(m_qfd, m_cfg.files[idx]);
             setFd(idx, fd);
 
-            LOG_INFO_VA("[====== %s (%u) =====]", m_cfg.files[idx].c_str(), fd);
+            LOG_INFO_VA("[====== %s (%u) =====]", m_cfg.files[idx], fd);
             system(m_cfg.command.c_str());
         }
     }
@@ -71,9 +71,10 @@ void
 Poll::close()
 {
     ::close(m_qfd);
-    for (auto &fd : m_fds) {
+    for (const auto &fd : m_fds) {
         ::close(fd);
     }
+    m_fds.clear();
 }
 
 //------------------------------------------------------------------------------
