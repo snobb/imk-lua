@@ -6,6 +6,7 @@
 #include <stdlib.h>
 #include <stdbool.h>
 #include <unistd.h>
+#include <fcntl.h>
 #include <signal.h>
 #include <errno.h>
 #include <sys/stat.h>
@@ -37,7 +38,7 @@ Poll::regFile(const char *path)
         signal(SIGINT, sig_handler);
         signal(SIGTERM, sig_handler);
 
-        if ((m_qfd = inotify_init()) == -1) {
+        if ((m_qfd = ::inotify_init()) == -1) {
             LOG_PERROR("inotify_init");
             exit(1);
         }
@@ -118,7 +119,6 @@ sig_handler(int sig)
 {
     s_running = false;
     LOG_ERR("interrupted");
-    exit(1);
 }
 
 //------------------------------------------------------------------------------

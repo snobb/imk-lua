@@ -16,14 +16,16 @@ public:
     Poll(Config &cfg);
     ~Poll() { close(); }
 
-    // Platform depenedant methods defined in /compat
-    int regFile(const char *path);
+    // platform specific
     int dispatch();
 
 private:
+    // platform specific
+    int regFile(const char *path);
+    void close();
+
     ssize_t getFdIndex(int fd);
     void setFd(size_t idx, int fd);
-    void close();
 
     Config &m_cfg;
     int m_qfd;
