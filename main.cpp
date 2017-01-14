@@ -29,8 +29,8 @@ main(int argc, char **argv)
     parseArgs(argc, argv, cfg);
 
     stringstream files;
-    vector<const char *>::const_iterator it = cfg.files.begin();
-    for (; it != prev(cfg.files.end()); ++it) {
+    auto it = cfg.files.cbegin();
+    for (; it != prev(cfg.files.cend()); ++it) {
         files << *it << " ";
     }
     files << cfg.files.back();
