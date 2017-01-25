@@ -22,7 +22,11 @@ using namespace imk;
 #define EVENT_SIZE      (sizeof(struct inotify_event))
 #define BUF_LEN         (1024 * (EVENT_SIZE + 16))
 
+#ifdef VBOX
+#define FILTERS         (IN_MOVE_SELF | IN_ONESHOT)
+#else
 #define FILTERS         (IN_MODIFY | IN_ONESHOT)
+#endif
 
 static bool s_running = false;
 

@@ -1,36 +1,52 @@
 TARGET          := imk
 CXX             ?= g++
 BUILD_HOST      := build_host.hpp
-SRC             != (ls *.cpp compat/poll_bsd.cpp || true)
-OBJ             := $(SRC:.cpp=.o)
+SRC             := $(wildcard *.cpp)
+OS              := $(shell uname -s)
+VBOX            := $(shell lsmod | grep -qi 'vbox' && echo yes)
+
+ifeq ($(OS), Linux)
+    GRP    := root
+    SRC    += compat/poll_linux.cpp
+else ifeq ($(OS), $(filter $(OS), NetBSD OpenBSD FreeBSD Darwin))
+    GRP    := wheel
+    SRC    += compat/poll_bsd.cpp
+else
+    $(error Unrecognized OS)
+endif
+
 INSTALL         := install
-INSTALL_ARGS    := -o root -g wheel -m 755
+INSTALL_ARGS    := -o root -g $(GRP) -m 755
 INSTALL_DIR     := /usr/local/bin/
+
+OBJ             := $(SRC:.cpp=.o)
 
 INCLUDES        :=
 LIBS            :=
+
 CXXFLAGS        := -Wall $(INCLUDES)
 LFLAGS          := $(LIBS)
 
-.if $(CXX) == g++ || $(CXX) == clang++ || $(CXX) == c++ || $(CXX) == eg++
-    CXXFLAGS := -std=c++11 -pedantic
-.endif
+ifeq ($(CXX), $(filter $(CXX), clang++ g++ c++ eg++))
+    CXXFLAGS += -std=c++11 -pedantic
+endif
 
-.if make(release) || make(install)
-    CXXFLAGS += -O3
-.elif make(static)
-    CXXFLAGS += -static
-    LFLAGS += -static
-.else # debug
-    CXXFLAGS += -g -ggdb -DDEBUG
-    LFLAGS += -g
-.endif
+ifeq ($(VBOX), yes)
+    CXXFLAGS    += -DVBOX
+endif
 
 all: debug
+
+debug: CXXFLAGS += -g -ggdb -DDEBUG
+debug: LFLAGS += -g
 debug: build
+
+release: CXXFLAGS += -O3
 release: clean build
 	strip $(TARGET)
 
+static: CXXFLAGS += -static
+static: LFLAGS += -static
 static: release
 
 build: $(BUILD_HOST) $(TARGET)
@@ -44,8 +60,8 @@ $(BUILD_HOST):
 $(TARGET): $(BUILD_HOST) $(OBJ)
 	$(CXX) $(LFLAGS) -o $@ $(OBJ)
 
-.cpp.o:
-	$(CXX) $(CXXFLAGS) -o $@ -c $<
+.c.o:
+	$(CXX) $(CXXFLAGS) -o $@ -c $?
 
 install: release
 	$(INSTALL) $(INSTALL_ARGS) $(TARGET) $(INSTALL_DIR)
