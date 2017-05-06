@@ -8,15 +8,16 @@
 #include <stdlib.h>
 #include <getopt.h>
 
-#include "imk.hpp"
-#include "poll_compat.hpp"
+#include "context.hpp"
 #include "log.hpp"
 
 using namespace std;
 using namespace imk;
 
-void parseArgs(int argc, char **argv, Config &cfg);
-void usage(const char *pname);
+static void parseArgs(int argc, char **argv);
+static void usage(const char *pname);
+
+Context ctx;
 
 //------------------------------------------------------------------------------
 int
@@ -25,27 +26,31 @@ main(int argc, char **argv)
     setbuf(stdout, NULL);
     setbuf(stderr, NULL);
 
-    Config cfg;
-    parseArgs(argc, argv, cfg);
+    parseArgs(argc, argv);
 
     stringstream files;
-    auto it = cfg.files.cbegin();
-    for (; it != prev(cfg.files.cend()); ++it) {
-        files << *it << " ";
+    if (ctx.files().empty()) {
+        LOG_ERR("no files to monitor");
+        exit(1);
     }
-    files << cfg.files.back();
-    printf(":: [%s] start monitoring: cmd[%s] files[%s]\n", get_time(),
-            cfg.command.c_str(), files.str().c_str());
 
-    Poll poll(cfg);
-    poll.dispatch();
+    auto it = ctx.files().cbegin();
+    files << it->second;
+    for (++it; it != ctx.files().cend(); ++it) {
+        files << " " << it->second;
+    }
+    printf(":: [%s] start monitoring: cmd[%s] files[%s]\n", get_time(),
+            ctx.command().empty() ? "none" : ctx.command().c_str(),
+            files.str().c_str());
+
+    ctx.dispatch();
 
     return 0;
 }
 
 //------------------------------------------------------------------------------
-void
-parseArgs(int argc, char **argv, Config &cfg)
+static void
+parseArgs(int argc, char **argv)
 {
     int ch;
     opterr = 0;
@@ -62,7 +67,7 @@ parseArgs(int argc, char **argv, Config &cfg)
                 exit(0);
 
             case 'c':
-                cfg.command = optarg;
+                ctx.command(optarg);
                 break;
 
             default:
@@ -72,21 +77,18 @@ parseArgs(int argc, char **argv, Config &cfg)
     }
 
     const char **files = (const char **)argv + optind;
-    cfg.files = vector<const char *>(files, files + argc - optind);
-
-    if (cfg.command.empty()) {
-        LOG_ERR("error: command was not specified");
+    if (*files == NULL) {
+        LOG_ERR("error: no files to monitor");
         exit(1);
     }
 
-    if (files == NULL) {
-        LOG_ERR("error: no files to monitor");
-        exit(1);
+    while(*files != NULL) {
+        ctx.registerFile(*files++);
     }
 }
 
 //------------------------------------------------------------------------------
-void
+static void
 usage(const char *pname)
 {
     fprintf(stdout,

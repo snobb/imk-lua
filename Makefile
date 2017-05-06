@@ -2,43 +2,37 @@ TARGET          := imk
 CXX             ?= g++
 BUILD_HOST      := build_host.hpp
 SRC             := $(wildcard *.cpp)
+OBJ             := $(SRC:.cpp=.o)
 OS              := $(shell uname -s)
-VBOX            := $(shell lsmod | grep -qi 'vbox' && echo yes)
-
-ifeq ($(OS), Linux)
-    GRP    := root
-    SRC    += compat/poll_linux.cpp
-else ifeq ($(OS), $(filter $(OS), NetBSD OpenBSD FreeBSD Darwin))
-    GRP    := wheel
-    SRC    += compat/poll_bsd.cpp
-else
-    $(error Unrecognized OS)
-endif
+LUA_VERSION     := 5.2
 
 INSTALL         := install
 INSTALL_ARGS    := -o root -g $(GRP) -m 755
 INSTALL_DIR     := /usr/local/bin/
 
-OBJ             := $(SRC:.cpp=.o)
-
-INCLUDES        :=
-LIBS            :=
-
-CXXFLAGS        := -Wall $(INCLUDES)
-LFLAGS          := $(LIBS)
+CXXFLAGS        := -Wall
 
 ifeq ($(CXX), $(filter $(CXX), clang++ g++ c++ eg++))
     CXXFLAGS += -std=c++11 -pedantic
 endif
 
-ifeq ($(VBOX), yes)
-    CXXFLAGS    += -DVBOX
+ifeq ($(OS), Linux)
+    GRP         := root
+    CXXFLAGS    += $(shell pkg-config --cflags lua$(LUA_VERSION))
+    LDFLAGS     += $(shell pkg-config --libs lua$(LUA_VERSION))
+else ifeq ($(OS), $(filter $(OS), NetBSD OpenBSD FreeBSD Darwin))
+    GRP         := wheel
+    CXXFLAGS    += $(shell pkg-config --cflags lua-$(LUA_VERSION))
+    LDFLAGS     += $(shell pkg-config --libs lua-$(LUA_VERSION))
+else
+    $(error Unrecognized OS)
 endif
+
 
 all: debug
 
 debug: CXXFLAGS += -g -ggdb -DDEBUG
-debug: LFLAGS += -g
+debug: LDFLAGS += -g
 debug: build
 
 release: CXXFLAGS += -O3
@@ -46,7 +40,7 @@ release: clean build
 	strip $(TARGET)
 
 static: CXXFLAGS += -static
-static: LFLAGS += -static
+static: LDFLAGS += -static
 static: release
 
 build: $(BUILD_HOST) $(TARGET)
@@ -58,10 +52,10 @@ $(BUILD_HOST):
 	@echo "#define BUILD_KERNEL \"`uname -r`\""   >> $(BUILD_HOST)
 
 $(TARGET): $(BUILD_HOST) $(OBJ)
-	$(CXX) $(LFLAGS) -o $@ $(OBJ)
+	$(CXX) $(LDFLAGS) -o $@ $(OBJ)
 
-.c.o:
-	$(CXX) $(CXXFLAGS) -o $@ -c $?
+.cpp.o:
+	$(CXX) $(CXXFLAGS) -o $@ -c $<
 
 install: release
 	$(INSTALL) $(INSTALL_ARGS) $(TARGET) $(INSTALL_DIR)
