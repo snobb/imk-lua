@@ -22,14 +22,14 @@ using namespace std;
 
 #define EVENT_SIZE      (sizeof(struct inotify_event))
 #define BUF_LEN         (1024 * (EVENT_SIZE + 16))
-#define FILTERS         (IN_ALL_EVENTS | IN_ONESHOT)
+#define FILTERS         (IN_ALL_EVENTS)
 
 static void sig_handler(int);
 
 static bool s_running = false;
 
 //------------------------------------------------------------------------------
-Context::Context() : m_qfd(-1), m_luaInterp()
+Context::Context() : m_qfd(-1)
 {
     static int instCount = 0;
 
@@ -47,7 +47,7 @@ Context::Context() : m_qfd(-1), m_luaInterp()
     signal(SIGINT, sig_handler);
     signal(SIGTERM, sig_handler);
 
-    if ((m_qfd = ::inotify_init1(O_NONBLOCK)) == -1) {
+    if ((m_qfd = ::inotify_init()) == -1) {
         LOG_PERROR("inotify_init");
         exit(1);
     }
@@ -126,10 +126,6 @@ Context::findRcFile(char *rcFileOut)
 }
 
 //------------------------------------------------------------------------------
-// Linux specific methods
-//-----------------------------------------------------------------------------
-
-//------------------------------------------------------------------------------
 void
 Context::registerFile(const char *path)
 {
@@ -141,7 +137,6 @@ Context::registerFile(const char *path)
 
     if (S_ISDIR(st.st_mode)) {
         // recursively add all files in the directory
-        registerFile(path);
         walkDir(path);
     }
     else {
@@ -192,7 +187,6 @@ Context::dispatch()
             }
 
             const string fname = it->second;
-            m_files.erase(ev->wd);
 
             if (ev->mask & IN_OPEN) {
                 LOG_DEBUG("trigger open cb for %s", fname.c_str());
@@ -210,13 +204,21 @@ Context::dispatch()
                 LOG_DEBUG("trigger read cb for %s", fname.c_str());
                 m_luaInterp.eventRead(fname.c_str());
             }
-            else if ((ev->mask & IN_MODIFY) || (ev->mask & IN_ATTRIB) ||
-                    (ev->mask & IN_MOVE_SELF)) {
+            else if ((ev->mask & IN_MODIFY) || (ev->mask & IN_ATTRIB)) {
                 LOG_DEBUG("trigger write cb for %s", fname.c_str());
                 LOG_INFO_VA("[ ====== event %s (%u) =====]", fname.c_str(), ev->wd);
                 if (m_luaInterp.eventWrite(fname.c_str()) != LUA_OK) {
                     need_cmd = true;
                 }
+            }
+            else if (ev->mask & IN_MOVE_SELF) {
+                LOG_DEBUG("move_self event for %s", fname.c_str());
+                int wd = inotify_add_watch(m_qfd, fname.c_str(), FILTERS);
+                if (wd == -1) {
+                    LOG_PERROR("inotify_add_watch");
+                }
+                m_files.erase(ev->wd);
+                m_files[wd] = fname;
             }
             else if ((ev->mask & IN_DELETE) || (ev->mask & IN_DELETE_SELF)) {
                 LOG_DEBUG("trigger delete cb for %s", fname.c_str());
@@ -227,14 +229,6 @@ Context::dispatch()
             }
             else if (ev->mask & IN_IGNORED) {
                 LOG_DEBUG("IGNORED event for %s", fname.c_str());
-            }
-
-            if (!(ev->mask & IN_DELETE_SELF)) {
-                int wd = inotify_add_watch(m_qfd, fname.c_str(), FILTERS);
-                if (wd == -1) {
-                    LOG_PERROR("inotify_add_watch");
-                }
-                m_files[wd] = fname;
             }
 
             i += EVENT_SIZE + ev->len;

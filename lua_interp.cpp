@@ -70,22 +70,17 @@ LuaInterp::operator=(LuaInterp &other)
 void
 LuaInterp::executeScript(const char* fname)
 {
-    int result;
-
     LOG_DEBUG("loading lua config %s", fname);
 
     // Load the program; this supports both source code and bytecode files.
-    result = luaL_loadfile(m_state, fname);
-
-    if (result != LUA_OK) {
+    if (luaL_loadfile(m_state, fname) != LUA_OK) {
         printError();
         return;
     }
 
     // Finally, execute the program by calling into it. Change the arguments
     // if you're not running vanilla Lua code.
-    result = lua_pcall(m_state, 0, LUA_MULTRET, 0);
-    if (result != LUA_OK) {
+    if (lua_pcall(m_state, 0, LUA_MULTRET, 0) != LUA_OK) {
         printError();
         return;
     }
@@ -95,6 +90,8 @@ LuaInterp::executeScript(const char* fname)
 int
 LuaInterp::setupCb(const char *evTable, const char *key)
 {
+    LOG_DEBUG("setupCb: stack size %d", lua_gettop(m_state));
+
     // calling a function defined in .lua
     lua_getglobal(m_state, "events");
     if (!lua_istable(m_state, -1)) {
@@ -106,6 +103,7 @@ LuaInterp::setupCb(const char *evTable, const char *key)
     lua_gettable(m_state, -2);
 
     if (lua_isnil(m_state, -1)) {
+        lua_pop(m_state, 2);
         return LUA_ERRRUN;
     }
 
@@ -114,23 +112,24 @@ LuaInterp::setupCb(const char *evTable, const char *key)
 
 //------------------------------------------------------------------------------
 int
-LuaInterp::callCb(const char *key, size_t numArgs)
+LuaInterp::callCb(const char *key, size_t nArgs)
 {
-    if (!lua_isfunction(m_state, -(numArgs + 1))) {
+    LOG_DEBUG("callCb: stack size %d", lua_gettop(m_state));
+
+    if (!lua_isfunction(m_state, -(nArgs + 1))) {
         LOG_ERR_VA("%s.%s is not a function", EVENTS_TABLE, key);
         return LUA_ERRRUN;
     }
-    return lua_pcall(m_state, numArgs, 0, 0);
+    return lua_pcall(m_state, nArgs, 0, 0);
 }
 
 //------------------------------------------------------------------------------
-inline void
+void
 LuaInterp::printError()
 {
     // The error message is on top of the stack.
     // Fetch it, print it and then pop it off the stack.
-    const char* message = lua_tostring(m_state, -1);
-    LOG_ERR_VA("%s", message);
+    LOG_ERR_VA("%s", lua_tostring(m_state, -1));
     lua_pop(m_state, 1);
 }
 
@@ -147,7 +146,11 @@ LuaInterp::genericEvent(const char *evName, const char **args, size_t nArgs)
 
         result = callCb(evName, 1);
         if (result != LUA_OK) {
-            lua_error(m_state);
+            printError();
+            lua_pop(m_state, nArgs);
+        }
+        else {
+            lua_pop(m_state, 1);
         }
     }
 
@@ -213,11 +216,11 @@ LuaInterp::apiShell(lua_State *L)
     int nargs = lua_gettop(L);
 
     if (nargs != 1) {
-        luaL_error(L, "shell: 1 argument expected");
+        return luaL_error(L, "shell: 1 argument expected");
     }
 
     if (lua_type(L, 1) != LUA_TSTRING) {
-        luaL_error(L, "shell: the argument must be a string");
+        return luaL_error(L, "shell: the argument must be a string");
     }
 
     const char *cmd = lua_tostring(L, 1);
@@ -232,7 +235,7 @@ LuaInterp::apiGetFiles(lua_State *L)
     int nargs = lua_gettop(L);
 
     if (nargs > 0) {
-        luaL_error(L, "get_files: too many arguments");
+        return luaL_error(L, "get_files: too many arguments");
     }
 
     lua_newtable(L);
@@ -253,7 +256,7 @@ LuaInterp::apiCommand(lua_State *L)
     int nargs = lua_gettop(L);
 
     if (nargs > 0) {
-        luaL_error(L, "command: too many arguments");
+        return luaL_error(L, "command: too many arguments");
     }
 
     if (!ctx.command().empty()) {

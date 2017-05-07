@@ -34,9 +34,9 @@ private:
     LuaInterp(const LuaInterp&);
     LuaInterp &operator=(const LuaInterp&);
     int setupCb(const char *evTable, const char *key);
-    int callCb(const char *key, size_t numArgs);
+    int callCb(const char *key, size_t nArgs);
 
-    int genericEvent(const char *evName, const char **args, size_t numArgs);
+    int genericEvent(const char *evName, const char **args, size_t nArgs);
     void printError();
 
     struct StateDeleter

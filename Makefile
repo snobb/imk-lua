@@ -5,29 +5,18 @@ SRC             := $(wildcard *.cpp)
 OBJ             := $(SRC:.cpp=.o)
 OS              := $(shell uname -s)
 LUA_VERSION     := 5.2
+GRP             := root
 
 INSTALL         := install
 INSTALL_ARGS    := -o root -g $(GRP) -m 755
 INSTALL_DIR     := /usr/local/bin/
 
-CXXFLAGS        := -Wall
+CXXFLAGS        := -Wall $(shell pkg-config --cflags lua$(LUA_VERSION))
+LDFLAGS         := $(shell pkg-config --libs lua$(LUA_VERSION))
 
 ifeq ($(CXX), $(filter $(CXX), clang++ g++ c++ eg++))
     CXXFLAGS += -std=c++11 -pedantic
 endif
-
-ifeq ($(OS), Linux)
-    GRP         := root
-    CXXFLAGS    += $(shell pkg-config --cflags lua$(LUA_VERSION))
-    LDFLAGS     += $(shell pkg-config --libs lua$(LUA_VERSION))
-else ifeq ($(OS), $(filter $(OS), NetBSD OpenBSD FreeBSD Darwin))
-    GRP         := wheel
-    CXXFLAGS    += $(shell pkg-config --cflags lua-$(LUA_VERSION))
-    LDFLAGS     += $(shell pkg-config --libs lua-$(LUA_VERSION))
-else
-    $(error Unrecognized OS)
-endif
-
 
 all: debug
 

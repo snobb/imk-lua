@@ -98,7 +98,9 @@ usage(const char *pname)
             "      -c <cmd>    - command to execute when event is triggered\n"
             "      <file ...>  - list of files to monitor\n\n"
             "   Please use quotes around the command if it is composed of "
-            "multiple words\n\n", pname);
+            "multiple words\n\n"
+            "   Lua event handlers are searched in .luarc.lua file in the "
+            "current directory and then in $HOME\n\n", pname);
 }
 
 //------------------------------------------------------------------------------

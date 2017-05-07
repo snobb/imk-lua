@@ -16,7 +16,7 @@ Currently the following events are supported:
     the file that triggered the event.
  - events.create
     triggered when a file is created in the monitored folder. The handler
-    accepts the full path/name of the file that triggered the event.
+    accepts the full path/name of the folder where the file was created.
  - events.read
     triggered when a file is read. The handler accepts the full path/name of
     the file that triggered the event.
@@ -40,11 +40,8 @@ The following API calls are supported:
 --------------------------------------
 function open_cb(fname)
     print("opened " .. fname .. " file")
-    if string.ends(fname, "test.txt") then
-        print("this is a test.txt file")
-        imk_command()
-    end
 
+    --[[
     print "-- monitored files files"
     local files = imk_getfiles()
     for i,v in ipairs(files) do
@@ -55,6 +52,7 @@ function open_cb(fname)
     for i=1,#files do
         print(files[i])
     end
+    --]]
 end
 events.open = open_cb
 
@@ -66,17 +64,17 @@ events.close = close_cb
 function create_cb(fname)
     print("created the " .. fname .. " file")
 end
-events.read = read_cb
+events.create = create_cb
 
 function read_cb(fname)
     print("accessed the " .. fname .. " file")
-    imk_command()
+    imk_shell("ls -al " .. fname)
 end
 events.read = read_cb
 
 function write_cb(fname)
     print("modified the " .. fname .. " file")
-    imk_shell("ls -al " .. fname)
+    imk_command()
 end
 events.write = write_cb
 

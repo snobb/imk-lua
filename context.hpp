@@ -35,9 +35,9 @@ private:
     int findRcFile(char *rcFileOut);
 
     int m_qfd = -1;
-    LuaInterp m_luaInterp;
     std::string m_command;
     FileRegistry m_files;
+    LuaInterp m_luaInterp;
 
     // disable default and copy constructors and assignment operator
     Context(Context &) = delete;
