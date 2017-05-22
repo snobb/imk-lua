@@ -10,10 +10,13 @@ $ ./imk -h
 usage: ./imk [-h] -c <command> <file ...>
 
    The options are as follows:
-      -c <command> - command to execute when event triggered
-      <file ...>   - list of files to monitor
+      -h          - display this text and exit
+      -c <cmd>    - command to execute when event is triggered
+      <file ...>  - list of files to monitor
 
-   Please use quotes around command if it is composed of multiple words
+   Please use quotes around the command if it is composed of multiple words
+
+   Lua event handlers are searched in .luarc.lua file in the current directory and then in $HOME
 ```
 
 To monitor all .cpp files and run make run the following:
@@ -24,6 +27,8 @@ $ ./imk -c 'make release' *.cpp
 ```
 
 If any of the monitored files are modified, the command will be executed.
+
+In Lua version the command is optional and will be executed on write event unless a Lua handler for write event is configured. Otherwise it can be executed using imk_command() call from any event handler. The handlers are loaded from .luarc.lua file (searched at ./ and then in ~/)
 
 Known Issues:
 -------------
