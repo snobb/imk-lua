@@ -3,7 +3,7 @@ CXX             ?= g++
 BUILD_HOST      := build_host.hpp
 SRC             := $(wildcard *.cpp)
 OS              := $(shell uname -s)
-VBOX            := $(shell lsmod | grep -qi 'vbox' && echo yes)
+VBOX            := $(shell lsmod | grep -qi 'vboxguest' && echo yes)
 
 ifeq ($(OS), Linux)
     GRP    := root

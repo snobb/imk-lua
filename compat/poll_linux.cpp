@@ -69,6 +69,7 @@ Poll::dispatch()
 {
     ssize_t len;
     char buf[BUF_LEN];
+    time_t next = { 0 };
 
     s_running = true;
     while (s_running) {
@@ -100,7 +101,10 @@ Poll::dispatch()
             i += EVENT_SIZE + ev->len;
         }
 
-        system(m_cfg.command.c_str());
+        if (time(NULL) > next) {
+            system(m_cfg.command.c_str());
+            next = time(NULL) + m_cfg.threshold;
+        }
     }
 
     return 0;
@@ -123,6 +127,7 @@ sig_handler(int sig)
 {
     s_running = false;
     LOG_ERR("interrupted");
+    exit(13);
 }
 
 //------------------------------------------------------------------------------

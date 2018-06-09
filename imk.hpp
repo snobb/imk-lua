@@ -6,7 +6,10 @@
 
 struct Config {
     std::string command;
+    int threshold;
     std::vector<const char *> files;
+
+    Config() : threshold(0) {}
 };
 
 #endif /* __IMK_HPP__ */

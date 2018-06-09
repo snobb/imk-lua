@@ -34,8 +34,8 @@ main(int argc, char **argv)
         files << *it << " ";
     }
     files << cfg.files.back();
-    printf(":: [%s] start monitoring: cmd[%s] files[%s]\n", get_time(),
-            cfg.command.c_str(), files.str().c_str());
+    printf(":: [%s] start monitoring: cmd[%s] threshold[%d] files[%s]\n", get_time(),
+            cfg.command.c_str(), cfg.threshold, files.str().c_str());
 
     Poll poll(cfg);
     poll.dispatch();
@@ -55,7 +55,7 @@ parseArgs(int argc, char **argv, Config &cfg)
         usage(pname);
     }
 
-    while ((ch = getopt(argc, argv, "hc:")) != -1) {
+    while ((ch = getopt(argc, argv, "hc:t:")) != -1) {
         switch (ch) {
             case 'h':
                 usage(pname);
@@ -63,6 +63,10 @@ parseArgs(int argc, char **argv, Config &cfg)
 
             case 'c':
                 cfg.command = optarg;
+                break;
+
+            case 't':
+                cfg.threshold = atoi(optarg);
                 break;
 
             default:
@@ -94,6 +98,8 @@ usage(const char *pname)
             "   The options are as follows:\n"
             "      -h          - display this text and exit\n"
             "      -c <cmd>    - command to execute when event is triggered\n"
+            "      -t <sec>    - number of seconds to skip after the last"
+            " executed command (default 0)\n"
             "      <file ...>  - list of files to monitor\n\n"
             "   Please use quotes around the command if it is composed of "
             "multiple words\n\n", pname);

@@ -41,6 +41,7 @@ int
 Poll::dispatch()
 {
     struct kevent ev;
+    time_t next = { 0 };
 
     s_running = true;
     while (s_running) {
@@ -59,7 +60,10 @@ Poll::dispatch()
             setFd(idx, fd);
 
             LOG_INFO_VA("[====== %s (%u) =====]", m_cfg.files[idx], fd);
-            system(m_cfg.command.c_str());
+            if (time(NULL) > next) {
+                system(m_cfg.command.c_str());
+                next = time(NULL) + m_cfg.threshold;
+            }
         }
     }
 
@@ -104,6 +108,7 @@ sig_handler(int sig)
 {
     s_running = false;
     LOG_ERR("interrupted");
+    exit(13);
 }
 
 //------------------------------------------------------------------------------
