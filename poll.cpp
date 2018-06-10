@@ -3,8 +3,11 @@
  *  author: Aleksei Kozadaev (2017)
  */
 
+#include <string>
+
 #include "poll_compat.hpp"
 
+using namespace std;
 using namespace imk;
 
 //------------------------------------------------------------------------------
@@ -18,26 +21,25 @@ Poll::Poll(Config &cfg) : m_cfg(cfg), m_qfd(-1)
     }
     ++instance_cnt;
 
-    m_fds.reserve(cfg.files.size());
     for (const auto &file : cfg.files) {
-        m_fds.push_back(regFile(file));
+        m_fds[regFile(file)] = file;
     }
 }
 
 //------------------------------------------------------------------------------
-ssize_t
-Poll::getFdIndex(int fd)
+std::pair<bool,string>
+Poll::updateFd(int fd)
 {
-    const auto &it = std::find(m_fds.begin(), m_fds.end(), fd);
-    return (it == m_fds.end() ? -1 : (it - m_fds.begin()));;
-}
+    const auto &it = m_fds.find(fd);
 
-//------------------------------------------------------------------------------
-void
-Poll::setFd(size_t idx, int fd)
-{
-    if (idx >= m_fds.size()) { return; }
-    m_fds[idx] = fd;
+    if (it != m_fds.end()) {
+        string fileName = it->second;
+        m_fds[regFile(it->second)] = it->second;
+        m_fds.erase(it);
+        return make_pair(true, fileName);
+    } else {
+        return make_pair(false, "");
+    }
 }
 
 //------------------------------------------------------------------------------

@@ -20,7 +20,7 @@ using namespace std;
 using namespace imk;
 
 #define EVENT_SIZE      (sizeof(struct inotify_event))
-#define BUF_LEN         (1024 * (EVENT_SIZE + 16))
+#define BUF_LEN         (8 * (EVENT_SIZE + 16))
 
 #ifdef VBOX
 #define FILTERS         (IN_MOVE_SELF | IN_ONESHOT)
@@ -34,7 +34,7 @@ static void sig_handler(int);
 
 //------------------------------------------------------------------------------
 int
-Poll::regFile(const char *path)
+Poll::regFile(const string &path)
 {
     int rv;
 
@@ -49,11 +49,11 @@ Poll::regFile(const char *path)
     }
 
     struct stat st;
-    if ((rv = stat(path, &st)) != 0) {
+    if ((rv = stat(path.c_str(), &st)) != 0) {
         return -1;
     }
 
-    rv = inotify_add_watch(m_qfd, path, FILTERS);
+    rv = inotify_add_watch(m_qfd, path.c_str(), FILTERS);
 
     if (rv == -1) {
         LOG_PERROR("inotify_add_watch");
@@ -88,14 +88,9 @@ Poll::dispatch()
         for (ssize_t i = 0; i < len;) {
             struct inotify_event *ev = (struct inotify_event *)&buf[i];
 
-            ssize_t idx = getFdIndex(ev->wd);
-            if (idx != -1) {
-                LOG_INFO_VA("[====== %s (%u) =====]", m_cfg.files[idx], ev->wd);
-                int wd = inotify_add_watch(m_qfd, m_cfg.files[idx], FILTERS);
-                if (wd == -1) {
-                    LOG_PERROR("inotify_add_watch");
-                }
-                setFd(idx, wd);
+            const auto result = updateFd(ev->wd);
+            if (result.first) {
+                LOG_INFO_VA("[====== %s (%u) =====]", result.second.c_str(), ev->wd);
             }
 
             i += EVENT_SIZE + ev->len;
@@ -116,7 +111,7 @@ Poll::close()
 {
     ::close(m_qfd);
     for (const auto &fd : m_fds) {
-        ::close(fd);
+        ::close(fd.first);
     }
     m_fds.clear();
 }

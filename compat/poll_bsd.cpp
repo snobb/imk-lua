@@ -7,6 +7,8 @@
 #include <fcntl.h>
 #include <stdint.h>
 #include <sys/event.h>
+#include <sys/time.h>
+#include <signal.h>
 
 #include "../imk.hpp"
 #include "../poll_compat.hpp"
@@ -22,7 +24,7 @@ static bool s_running = false;
 
 //------------------------------------------------------------------------------
 int
-Poll::regFile(const char *path)
+Poll::regFile(const string &path)
 {
     if (m_qfd == -1) {
         signal(SIGINT, sig_handler);
@@ -33,7 +35,7 @@ Poll::regFile(const char *path)
         }
     }
 
-    return set_watch(m_qfd, path);
+    return set_watch(m_qfd, path.c_str());
 }
 
 //------------------------------------------------------------------------------
@@ -54,12 +56,11 @@ Poll::dispatch()
             LOG_PERROR("kevent");
         }
 
-        int idx = getFdIndex((int)(intptr_t)ev.udata);
-        if (idx != -1) {
-            int fd = set_watch(m_qfd, m_cfg.files[idx]);
-            setFd(idx, fd);
+        int fd = (int)(intptr_t)ev.udata;
+        const auto result = updateFd(fd);
+        if (result.first) {
+            LOG_INFO_VA("[====== %s (%u) =====]", result.second.c_str(), fd);
 
-            LOG_INFO_VA("[====== %s (%u) =====]", m_cfg.files[idx], fd);
             if (time(NULL) > next) {
                 system(m_cfg.command.c_str());
                 next = time(NULL) + m_cfg.threshold;
@@ -76,7 +77,7 @@ Poll::close()
 {
     ::close(m_qfd);
     for (const auto &fd : m_fds) {
-        ::close(fd);
+        ::close(fd.first);
     }
     m_fds.clear();
 }
