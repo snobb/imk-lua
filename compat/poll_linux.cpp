@@ -28,9 +28,7 @@ using namespace imk;
 #define FILTERS         (IN_MODIFY | IN_ONESHOT)
 #endif
 
-static bool s_running = false;
-
-static void sig_handler(int);
+static void sigHandler(int);
 
 //------------------------------------------------------------------------------
 int
@@ -39,8 +37,8 @@ Poll::regFile(const string &path)
     int rv;
 
     if (m_qfd == -1) {
-        signal(SIGINT, sig_handler);
-        signal(SIGTERM, sig_handler);
+        signal(SIGINT, sigHandler);
+        signal(SIGTERM, sigHandler);
 
         if ((m_qfd = ::inotify_init()) == -1) {
             LOG_PERROR("inotify_init");
@@ -71,8 +69,7 @@ Poll::dispatch()
     char buf[BUF_LEN];
     time_t next = { 0 };
 
-    s_running = true;
-    while (s_running) {
+    for (;;) {
         if ((len = read(m_qfd, buf, BUF_LEN)) == -1) {
             if (errno == EAGAIN || errno == EINTR) {
                 continue;
@@ -118,11 +115,10 @@ Poll::close()
 
 //------------------------------------------------------------------------------
 void
-sig_handler(int sig)
+sigHandler(int sig)
 {
-    s_running = false;
-    LOG_ERR("interrupted");
-    exit(13);
+    LOG_ERR("interrupted...");
+    exit(15);
 }
 
 //------------------------------------------------------------------------------

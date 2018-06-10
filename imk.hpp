@@ -7,7 +7,7 @@
 struct Config {
     std::string command;
     int threshold;
-    std::vector<const char *> files;
+    std::vector<std::string> files;
 
     Config() : threshold(0) {}
 };

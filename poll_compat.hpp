@@ -29,10 +29,9 @@ private:
     // generic
     std::pair<bool,std::string> updateFd(int fd);
 
-    Config &m_cfg;
+    const Config &m_cfg;
     int m_qfd;
     std::map<int, std::string> m_fds;
-
 
     // disable default and copy constructors;
     Poll() =delete;

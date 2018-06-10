@@ -21,8 +21,8 @@ Poll::Poll(Config &cfg) : m_cfg(cfg), m_qfd(-1)
     }
     ++instance_cnt;
 
-    for (const auto &file : cfg.files) {
-        m_fds[regFile(file)] = file;
+    for (const auto &fileName : cfg.files) {
+        m_fds[regFile(fileName)] = fileName;
     }
 }
 
@@ -30,15 +30,15 @@ Poll::Poll(Config &cfg) : m_cfg(cfg), m_qfd(-1)
 std::pair<bool,string>
 Poll::updateFd(int fd)
 {
-    const auto &it = m_fds.find(fd);
+    const auto it = m_fds.find(fd);
 
     if (it != m_fds.end()) {
-        string fileName = it->second;
-        m_fds[regFile(it->second)] = it->second;
+        const auto fileName = it->second;
+        m_fds[regFile(fileName)] = fileName;
         m_fds.erase(it);
         return make_pair(true, fileName);
     } else {
-        return make_pair(false, "");
+        return make_pair(false, string());
     }
 }
 

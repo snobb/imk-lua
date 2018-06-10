@@ -76,7 +76,7 @@ parseArgs(int argc, char **argv, Config &cfg)
     }
 
     const char **files = (const char **)argv + optind;
-    cfg.files = vector<const char *>(files, files + argc - optind);
+    cfg.files.insert(cfg.files.begin(), files, files + argc - optind);
 
     if (cfg.command.empty()) {
         LOG_ERR("error: command was not specified");

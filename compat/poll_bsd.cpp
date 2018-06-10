@@ -18,17 +18,15 @@ using namespace std;
 using namespace imk;
 
 static int set_watch(int qfd, const char *path);
-static void sig_handler(int);
-
-static bool s_running = false;
+static void sigHandler(int);
 
 //------------------------------------------------------------------------------
 int
 Poll::regFile(const string &path)
 {
     if (m_qfd == -1) {
-        signal(SIGINT, sig_handler);
-        signal(SIGTERM, sig_handler);
+        signal(SIGINT, sigHandler);
+        signal(SIGTERM, sigHandler);
 
         if ((m_qfd = kqueue()) == -1) {
             LOG_PERROR("kqueue");
@@ -45,8 +43,7 @@ Poll::dispatch()
     struct kevent ev;
     time_t next = { 0 };
 
-    s_running = true;
-    while (s_running) {
+    for (;;) {
         memset(&ev, 0, sizeof(ev));
 
         if (kevent(m_qfd, NULL, 0, &ev, 1, NULL) == -1) {
@@ -105,11 +102,10 @@ set_watch(int qfd, const char *path)
 
 //------------------------------------------------------------------------------
 void
-sig_handler(int sig)
+sigHandler(int sig)
 {
-    s_running = false;
     LOG_ERR("interrupted");
-    exit(13);
+    exit(15);
 }
 
 //------------------------------------------------------------------------------
