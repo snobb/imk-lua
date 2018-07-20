@@ -94,7 +94,7 @@ Poll::dispatch()
         }
 
         if (time(NULL) > next) {
-            system(m_cfg.command.c_str());
+            runCommand(m_cfg.command);
             next = time(NULL) + m_cfg.threshold;
         }
     }

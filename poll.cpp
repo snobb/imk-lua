@@ -43,3 +43,16 @@ Poll::updateFd(int fd)
 }
 
 //------------------------------------------------------------------------------
+void
+Poll::runCommand(const string &cmd)
+{
+    int rv = system(cmd.c_str());
+    if (rv < 0) {
+        LOG_PERROR("===== system =====]");
+    } else {
+        LOG_INFO_VA("[====== %s (exit code %d) =====]",
+                rv == 0 ? "ok" : "fail", rv);
+    }
+}
+
+//------------------------------------------------------------------------------

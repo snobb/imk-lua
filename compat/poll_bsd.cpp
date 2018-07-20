@@ -59,7 +59,7 @@ Poll::dispatch()
             LOG_INFO_VA("[====== %s (%u) =====]", result.second.c_str(), fd);
 
             if (time(NULL) > next) {
-                system(m_cfg.command.c_str());
+                runCommand(m_cfg.command);
                 next = time(NULL) + m_cfg.threshold;
             }
         }

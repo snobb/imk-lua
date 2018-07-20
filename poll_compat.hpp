@@ -24,6 +24,7 @@ public:
 private:
     // platform specific
     int regFile(const std::string &path);
+    void runCommand(const std::string &cmd);
     void close();
 
     // generic
