@@ -7,9 +7,10 @@
 struct Config {
     std::string command;
     int threshold;
+    int oneRun;
     std::vector<std::string> files;
 
-    Config() : threshold(0) {}
+    Config() : threshold(0), oneRun(false) {}
 };
 
 #endif /* __IMK_HPP__ */

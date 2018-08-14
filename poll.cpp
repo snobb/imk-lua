@@ -53,6 +53,10 @@ Poll::runCommand(const string &cmd)
         LOG_INFO_VA("[====== %s (exit code %d) =====]",
                 rv == 0 ? "ok" : "fail", rv);
     }
+
+    if (m_cfg.oneRun) {
+        ::exit(rv);
+    }
 }
 
 //------------------------------------------------------------------------------

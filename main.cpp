@@ -55,7 +55,7 @@ parseArgs(int argc, char **argv, Config &cfg)
         usage(pname);
     }
 
-    while ((ch = getopt(argc, argv, "hc:t:")) != -1) {
+    while ((ch = getopt(argc, argv, "hc:t:o")) != -1) {
         switch (ch) {
             case 'h':
                 usage(pname);
@@ -63,6 +63,10 @@ parseArgs(int argc, char **argv, Config &cfg)
 
             case 'c':
                 cfg.command = optarg;
+                break;
+
+            case 'o':
+                cfg.oneRun = true;
                 break;
 
             case 't':
@@ -94,10 +98,11 @@ void
 usage(const char *pname)
 {
     fprintf(stdout,
-            "usage: %s [-h] -c <command> <file ...>\n\n"
+            "usage: %s [-h] -c <command> [-t <sec>] [-o] <file ...>\n\n"
             "   The options are as follows:\n"
             "      -h          - display this text and exit\n"
             "      -c <cmd>    - command to execute when event is triggered\n"
+            "      -o          - exit after first iteration\n"
             "      -t <sec>    - number of seconds to skip after the last"
             " executed command (default 0)\n"
             "      <file ...>  - list of files to monitor\n\n"
