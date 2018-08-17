@@ -18,7 +18,7 @@ using namespace imk;
 void parseArgs(int argc, char **argv, Config &cfg);
 void usage(const char *pname);
 
-//------------------------------------------------------------------------------
+//------------------------------------------------------------------------------------------------
 int
 main(int argc, char **argv)
 {
@@ -43,7 +43,7 @@ main(int argc, char **argv)
     return 0;
 }
 
-//------------------------------------------------------------------------------
+//------------------------------------------------------------------------------------------------
 void
 parseArgs(int argc, char **argv, Config &cfg)
 {
@@ -55,7 +55,7 @@ parseArgs(int argc, char **argv, Config &cfg)
         usage(pname);
     }
 
-    while ((ch = getopt(argc, argv, "hc:t:o")) != -1) {
+    while ((ch = getopt(argc, argv, "hc:t:os:")) != -1) {
         switch (ch) {
             case 'h':
                 usage(pname);
@@ -71,6 +71,10 @@ parseArgs(int argc, char **argv, Config &cfg)
 
             case 't':
                 cfg.threshold = atoi(optarg);
+                break;
+
+            case 's':
+                cfg.sleepDelete = atoi(optarg);
                 break;
 
             default:
@@ -93,7 +97,7 @@ parseArgs(int argc, char **argv, Config &cfg)
     }
 }
 
-//------------------------------------------------------------------------------
+//------------------------------------------------------------------------------------------------
 void
 usage(const char *pname)
 {
@@ -103,11 +107,13 @@ usage(const char *pname)
             "      -h          - display this text and exit\n"
             "      -c <cmd>    - command to execute when event is triggered\n"
             "      -o          - exit after first iteration\n"
-            "      -t <sec>    - number of seconds to skip after the last"
-            " executed command (default 0)\n"
+            "      -t <sec>    - number of seconds to skip after the last executed command "
+            "(default 0)\n"
+            "      -s <sec>    - number of milliseconds to sleep before reattaching in case of "
+            "DELETE event (default 300)\n"
             "      <file ...>  - list of files to monitor\n\n"
-            "   Please use quotes around the command if it is composed of "
-            "multiple words\n\n", pname);
+            "   Please use quotes around the command if it is composed of multiple words\n\n",
+                pname);
 }
 
-//------------------------------------------------------------------------------
+//------------------------------------------------------------------------------------------------

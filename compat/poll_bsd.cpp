@@ -20,7 +20,7 @@ using namespace imk;
 static int set_watch(int qfd, const char *path);
 static void sigHandler(int);
 
-//------------------------------------------------------------------------------
+//------------------------------------------------------------------------------------------------
 int
 Poll::regFile(const string &path)
 {
@@ -36,7 +36,7 @@ Poll::regFile(const string &path)
     return set_watch(m_qfd, path.c_str());
 }
 
-//------------------------------------------------------------------------------
+//------------------------------------------------------------------------------------------------
 int
 Poll::dispatch()
 {
@@ -53,8 +53,14 @@ Poll::dispatch()
             LOG_PERROR("kevent");
         }
 
+
+        if (ev.flags & EVFILT_VNODE && ((ev.fflags & NOTE_DELETE) || (ev.fflags & NOTE_RENAME))) {
+            usleep(m_cfg.sleepDelete);
+        }
+
         int fd = (int)(intptr_t)ev.udata;
         const auto result = updateFd(fd);
+
         if (result.first) {
             LOG_INFO_VA("[====== %s (%u) =====]", result.second.c_str(), fd);
 
@@ -68,18 +74,20 @@ Poll::dispatch()
     return 0;
 }
 
-//------------------------------------------------------------------------------
+//------------------------------------------------------------------------------------------------
 void
 Poll::close()
 {
     ::close(m_qfd);
+
     for (const auto &fd : m_fds) {
         ::close(fd.first);
     }
+
     m_fds.clear();
 }
 
-//------------------------------------------------------------------------------
+//------------------------------------------------------------------------------------------------
 int
 set_watch(int qfd, const char *path)
 {
@@ -90,8 +98,8 @@ set_watch(int qfd, const char *path)
 
     struct kevent ev;
     int filter = EVFILT_VNODE;
-    EV_SET(&ev, fd, filter, EV_ADD | EV_ONESHOT,
-            NOTE_WRITE | NOTE_DELETE, 0, (void*)(intptr_t)fd);
+    EV_SET(&ev, fd, filter, EV_ADD | EV_ONESHOT, NOTE_WRITE | NOTE_DELETE | NOTE_RENAME,
+            0, (void*)(intptr_t)fd);
 
     if (kevent(qfd, &ev, 1, NULL , 0, NULL) == -1) {
         LOG_PERROR("kevent");
@@ -100,7 +108,7 @@ set_watch(int qfd, const char *path)
     return fd;
 }
 
-//------------------------------------------------------------------------------
+//------------------------------------------------------------------------------------------------
 void
 sigHandler(int sig)
 {
@@ -108,4 +116,4 @@ sigHandler(int sig)
     exit(15);
 }
 
-//------------------------------------------------------------------------------
+//------------------------------------------------------------------------------------------------

@@ -22,15 +22,11 @@ using namespace imk;
 #define EVENT_SIZE      (sizeof(struct inotify_event))
 #define BUF_LEN         (8 * (EVENT_SIZE + 16))
 
-#ifdef VBOX
-#define FILTERS         (IN_MOVE_SELF | IN_ONESHOT)
-#else
-#define FILTERS         (IN_MODIFY | IN_ONESHOT)
-#endif
+#define FILTERS         (IN_MODIFY | IN_ONESHOT | IN_DELETE_SELF | IN_MOVE_SELF)
 
 static void sigHandler(int);
 
-//------------------------------------------------------------------------------
+//------------------------------------------------------------------------------------------------
 int
 Poll::regFile(const string &path)
 {
@@ -61,7 +57,7 @@ Poll::regFile(const string &path)
     return rv;
 }
 
-//------------------------------------------------------------------------------
+//------------------------------------------------------------------------------------------------
 int
 Poll::dispatch()
 {
@@ -85,6 +81,13 @@ Poll::dispatch()
         for (ssize_t i = 0; i < len;) {
             struct inotify_event *ev = (struct inotify_event *)&buf[i];
 
+            // sometimes IN_DELETE_SELF or IN_MOVE_SELF mean the file is being processed by some
+            // program (eg. vim or gofmt), so if imk tries to reattach to the file immediately it
+            // may not exist. So sleep for a while before try to reattach to the file.
+            if ((ev->mask & IN_DELETE_SELF) || (ev->mask & IN_MOVE_SELF)) {
+                usleep(m_cfg.sleepDelete);
+            }
+
             const auto result = updateFd(ev->wd);
             if (result.first) {
                 LOG_INFO_VA("[====== %s (%u) =====]", result.second.c_str(), ev->wd);
@@ -102,7 +105,7 @@ Poll::dispatch()
     return 0;
 }
 
-//------------------------------------------------------------------------------
+//------------------------------------------------------------------------------------------------
 void
 Poll::close()
 {
@@ -113,7 +116,7 @@ Poll::close()
     m_fds.clear();
 }
 
-//------------------------------------------------------------------------------
+//------------------------------------------------------------------------------------------------
 void
 sigHandler(int sig)
 {
@@ -121,4 +124,4 @@ sigHandler(int sig)
     exit(15);
 }
 
-//------------------------------------------------------------------------------
+//------------------------------------------------------------------------------------------------

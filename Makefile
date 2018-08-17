@@ -7,7 +7,6 @@ OS              := $(shell uname -s)
 ifeq ($(OS), Linux)
     GRP    := root
     SRC    += compat/poll_linux.cpp
-	VBOX   := $(shell lsmod | grep -qi 'vboxguest' && echo yes)
 else ifeq ($(OS), $(filter $(OS), NetBSD OpenBSD FreeBSD Darwin))
     GRP    := wheel
     SRC    += compat/poll_bsd.cpp
@@ -24,15 +23,11 @@ OBJ             := $(SRC:.cpp=.o)
 INCLUDES        :=
 LIBS            :=
 
-CXXFLAGS        := -Wall $(INCLUDES)
+CXXFLAGS        := -Werror -Wall $(INCLUDES)
 LFLAGS          := $(LIBS)
 
 ifeq ($(CXX), $(filter $(CXX), clang++ g++ c++ eg++))
     CXXFLAGS += -std=c++11 -pedantic
-endif
-
-ifeq ($(VBOX), yes)
-    CXXFLAGS    += -DVBOX
 endif
 
 all: debug
