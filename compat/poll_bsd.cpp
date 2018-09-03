@@ -55,7 +55,7 @@ Poll::dispatch()
 
 
         if (ev.flags & EVFILT_VNODE && ((ev.fflags & NOTE_DELETE) || (ev.fflags & NOTE_RENAME))) {
-            usleep(m_cfg.sleepDelete);
+            usleep(m_cfg.sleepDelete * 1000);
         }
 
         int fd = (int)(intptr_t)ev.udata;

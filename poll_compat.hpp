@@ -35,7 +35,7 @@ private:
     std::map<int, std::string> m_fds;
 
     // disable default and copy constructors;
-    Poll() =delete;
+    Poll() = delete;
     Poll(Poll &) = delete;
     Poll(const Poll &) = delete;
 };

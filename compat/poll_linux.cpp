@@ -85,7 +85,7 @@ Poll::dispatch()
             // program (eg. vim or gofmt), so if imk tries to reattach to the file immediately it
             // may not exist. So sleep for a while before try to reattach to the file.
             if ((ev->mask & IN_DELETE_SELF) || (ev->mask & IN_MOVE_SELF)) {
-                usleep(m_cfg.sleepDelete);
+                usleep(m_cfg.sleepDelete * 1000);
             }
 
             const auto result = updateFd(ev->wd);
