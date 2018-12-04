@@ -28,7 +28,7 @@ static void sigHandler(int);
 
 //------------------------------------------------------------------------------------------------
 int
-Poll::regFile(const string &path)
+Poll::watch(const string &path)
 {
     int rv;
 

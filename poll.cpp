@@ -24,7 +24,7 @@ Poll::Poll(Config &cfg) : m_cfg(cfg), m_qfd(-1)
     ++instance_cnt;
 
     for (const auto &fileName : cfg.files) {
-        m_fds[regFile(fileName)] = fileName;
+        m_fds[watch(fileName)] = fileName;
     }
 }
 
@@ -36,7 +36,7 @@ Poll::updateFd(int fd)
 
     if (it != m_fds.end()) {
         const auto fileName = it->second;
-        int fd = regFile(fileName);
+        int fd = watch(fileName);
 
         m_fds[fd] = fileName;
         m_fds.erase(it);

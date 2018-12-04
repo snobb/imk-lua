@@ -23,7 +23,7 @@ public:
 
 private:
     // platform specific
-    int regFile(const std::string &path);
+    int watch(const std::string &path);
     void runCommand(const std::string &cmd);
     void close();
 
