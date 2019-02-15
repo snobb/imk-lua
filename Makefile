@@ -30,6 +30,16 @@ ifeq ($(CXX), $(filter $(CXX), clang++ g++ c++ eg++))
     CXXFLAGS += -std=c++11 -pedantic
 endif
 
+# version info from git
+REVCNT         := $(shell git rev-list --count master 2>/dev/null)
+ifeq ($(REVCNT),)
+	VERSION     := devel
+else
+	REVHASH     := $(shell git rev-parse --short HEAD 2>/dev/null)
+	ISCLEAN     := $(shell git diff-index --quiet HEAD || echo " [devel]" 2>/dev/null)
+	VERSION     := "$(REVCNT).$(REVHASH)$(ISCLEAN)"
+endif
+
 all: debug
 
 debug: CXXFLAGS += -g -ggdb -DDEBUG
@@ -51,6 +61,7 @@ $(BUILD_HOST):
 	@echo "#define BUILD_OS \"`uname`\""          >> $(BUILD_HOST)
 	@echo "#define BUILD_PLATFORM \"`uname -m`\"" >> $(BUILD_HOST)
 	@echo "#define BUILD_KERNEL \"`uname -r`\""   >> $(BUILD_HOST)
+	@echo "#define VERSION \"$(VERSION)\""        >> $(BUILD_HOST)
 
 $(TARGET): $(BUILD_HOST) $(OBJ)
 	$(CXX) $(LFLAGS) -o $@ $(OBJ)

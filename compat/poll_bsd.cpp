@@ -10,7 +10,7 @@
 #include <sys/time.h>
 #include <signal.h>
 
-#include "../imk.hpp"
+#include "../config.hpp"
 #include "../poll_compat.hpp"
 #include "../log.hpp"
 
